@@ -1,41 +1,6 @@
+version: "3.8"
 services:
-  web: 
-    build:
-      context: .
-      dockerfile: ./Dockerfile
-    depends_on:
-      - db
-      - pgadmin
-    restart: always
-    image: scrapper_image
-    container_name: scrapper
-    ports: 
-      - 80:80
-  
+  app :
+    build: ./app/
   db:
-    image: postgres
-    container_name: local_pgdb_
-    restart: always
-    ports:
-      - "5432:5432"
-    environment:
-      POSTGRES_USER: postgres_username
-      POSTGRES_PASSWORD: postgres_password
-    volumes:
-      - local_pgdata:/var/lib/postgresql/data
-  
-  pgadmin:
-    image: dpage/pgadmin4
-    container_name: pgadmin4_container_
-    restart: always
-    ports:
-      - "5050:80"
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@example.com
-      PGADMIN_DEFAULT_PASSWORD: admin_password
-    volumes:
-      - pgadmin-data:/var/lib/pgadmin
-
-volumes:
-  local_pgdata:
-  pgadmin-data:
+    build: ./database/

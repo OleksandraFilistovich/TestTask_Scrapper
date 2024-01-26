@@ -7,6 +7,7 @@
 import requests
 from bs4 import BeautifulSoup
 import re
+from src import db_start, db_check
 
 
 URL_BASE = "https://auto.ria.com/uk"
@@ -69,3 +70,6 @@ else:
 
 print(car)
 
+print(db_check.create_connection())
+
+# print(db_start.start_db())

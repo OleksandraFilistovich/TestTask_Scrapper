@@ -6,16 +6,16 @@ from dataclasses import dataclass, asdict
 @dataclass
 class CarInfo:
     """Class for storing fetched car information."""
-    url: str
-    title: str
-    price_usd: int
-    odometer: int
-    username: str
-    phone_number: str
-    image_url: str
-    images_count: int
-    car_number: str
-    car_vin: str
+    url: str = None
+    title: str = None
+    price_usd: int = None
+    odometer: int = None
+    username: str = None
+    phone_number: str = None
+    image_url: str = None
+    images_count: int = None
+    car_number: str = None
+    car_vin: str = None
 
     def to_dict(self):
         return asdict(self)

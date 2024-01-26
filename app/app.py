@@ -1,6 +1,6 @@
-import time
 import os
 
+from modules.scrapper import links_search, page_processing
 from modules.database import CarsDB
 from modules.car import CarInfo
 
@@ -11,23 +11,40 @@ password = os.environ.get('POSTGRES_PASSWORD')
 host = os.environ.get('POSTGRES_HOST')
 port = os.environ.get('POSTGRES_PORT')
 
-# Connecto to the database
+#  Connect to the database
 db = CarsDB.create_connection(user, password, host, port, name)
 
-
+#  Writes car info to db if possible
 def write_value(car_info):
     print("= Write start =")
     db.insert_value(car_info)
+
+def collecting_info(starting_page: int):
+    """Goes through found car pages in bunches,
+    writes car info to db if possible,
+    then goes to find more on next page."""
+    print("= Links search start =")
+    print(f"= {starting_page} page search =")
+
+    links = links_search(starting_page)
+    page = starting_page + 1
+
+    while links:
+        for link in links:
+            car = page_processing(link)
+            write_value(car)
+
+        print(f"= {page} page search =")
+        links = links_search(page)
+        page += 1
+
+        for link in links:
+            car = page_processing(link)
+            write_value(car)
+    print("= Pages ended =")
 
 
 if __name__ == '__main__':
     print('= Application started =')
     
-    k = 0
-    while True:
-        time.sleep(1)
-        k += 1
-        car_info = CarInfo('/auto.html', 'Benz', 16, 24, "Рома", "", "url_img", 33, "CA 3068 KC", 'WDDNG7DB3CA474969')
-        write_value(car_info)
-        #add_new_row(k)
-        #print(get_last_row())
+    collecting_info(int(os.environ.get('STARTING_PAGE')))

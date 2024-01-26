@@ -1,5 +1,4 @@
-from sqlalchemy import String, Integer, Column
-from sqlalchemy import create_engine, Table
+from sqlalchemy import Column, Integer, String, Table, create_engine
 from sqlalchemy.orm import DeclarativeBase
 
 from modules.car import CarInfo
@@ -11,6 +10,7 @@ class Base(DeclarativeBase):
 
 class Cars(Base):
     """Database table 'Cars' representation."""
+
     __table__ = Table(
         "cars",
         Base.metadata,
@@ -25,19 +25,19 @@ class Cars(Base):
         Column("images_count", Integer),
         Column("car_number", String),
         Column("car_vin", String),
-        Column("datetime_found", String)
+        Column("datetime_found", String),
     )
 
 
-class CarsDB():
+class CarsDB:
     """Class to work with 'Cars' db."""
+
     __instance = None
 
     def __init__(self, user, password, host, port, name):
         """Singleton class."""
         if CarsDB.__instance is not None:
-            raise Exception(
-                "This class is a singleton, use CarsDB.create_connection()")
+            raise Exception("Singleton class, use CarsDB.create_connection()")
         else:
             CarsDB.__instance = self
             db_connect = f"postgresql://{user}:{password}@{host}:{port}/{name}"
@@ -52,8 +52,8 @@ class CarsDB():
             CarsDB.__instance = CarsDB(user, password, host, port, name)
 
         return CarsDB.__instance
-    
-    def insert_value(self, value:CarInfo) -> None:
+
+    def insert_value(self, value: CarInfo) -> None:
         """Inserts info of the car into table if possible.
         Writes exact exception if failed."""
         with self.engine.connect() as conn:

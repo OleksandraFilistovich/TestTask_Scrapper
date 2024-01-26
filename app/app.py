@@ -1,23 +1,20 @@
 import os
 
-from modules.scrapper import links_search, page_processing
 from modules.database import CarsDB
-from modules.car import CarInfo
+from modules.scrapper import links_search, page_processing
 
+name = os.environ.get("POSTGRES_DB")
+user = os.environ.get("POSTGRES_USER")
+password = os.environ.get("POSTGRES_PASSWORD")
+host = os.environ.get("POSTGRES_HOST")
+port = os.environ.get("POSTGRES_PORT")
 
-name = os.environ.get('POSTGRES_DB')
-user = os.environ.get('POSTGRES_USER')
-password = os.environ.get('POSTGRES_PASSWORD')
-host = os.environ.get('POSTGRES_HOST')
-port = os.environ.get('POSTGRES_PORT')
-
-#  Connect to the database
-db = CarsDB.create_connection(user, password, host, port, name)
 
 #  Writes car info to db if possible
 def write_value(car_info):
     print("= Write start =")
     db.insert_value(car_info)
+
 
 def collecting_info(starting_page: int):
     """Goes through found car pages in bunches,
@@ -44,7 +41,10 @@ def collecting_info(starting_page: int):
     print("= Pages ended =")
 
 
-if __name__ == '__main__':
-    print('= Application started =')
-    
-    collecting_info(int(os.environ.get('STARTING_PAGE')))
+if __name__ == "__main__":
+    print("= Application started =")
+
+    #  Connect to the database
+    db = CarsDB.create_connection(user, password, host, port, name)
+
+    collecting_info(int(os.environ.get("STARTING_PAGE")))

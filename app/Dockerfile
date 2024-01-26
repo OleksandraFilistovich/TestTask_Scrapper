@@ -7,5 +7,5 @@ RUN pip install -r requirements.txt
 
 RUN echo "== Installed dependencies.."
 
-COPY app.py app.py
+COPY . .
 CMD ["python", "-u", "app.py"]

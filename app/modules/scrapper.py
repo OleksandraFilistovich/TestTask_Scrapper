@@ -6,6 +6,7 @@
 
 import requests
 from bs4 import BeautifulSoup
+from modules.car import CarInfo
 
 
 URL_BASE = "https://auto.ria.com/uk"
@@ -48,6 +49,7 @@ car["odometer"] = odometer
 car["username"] = soup.find(class_="seller_info_name").text.strip()
 
 #  !PhoneNumber
+car["phone_number"] = ''
 
 image_url = soup.find("div", class_="photo-620x465").find("img").attrs["src"]
 car["image_url"] = image_url

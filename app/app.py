@@ -1,41 +1,33 @@
 import time
 import os
 
-from sqlalchemy import create_engine, text, select
+from modules.database import CarsDB
+from modules.car import CarInfo
 
 
-db_name = os.environ.get('POSTGRES_DB')
-db_user = os.environ.get('POSTGRES_USER')
-db_pass = os.environ.get('POSTGRES_PASSWORD')
-db_host = os.environ.get('POSTGRES_HOST')
-db_port = os.environ.get('POSTGRES_PORT')
+name = os.environ.get('POSTGRES_DB')
+user = os.environ.get('POSTGRES_USER')
+password = os.environ.get('POSTGRES_PASSWORD')
+host = os.environ.get('POSTGRES_HOST')
+port = os.environ.get('POSTGRES_PORT')
 
 # Connecto to the database
-db_string = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
-db = create_engine(db_string)
-
-def add_new_row(n):
-    with db.connect() as conn:
-        query = f"""INSERT INTO cars (url) VALUES ({n});"""
-        result = conn.execute(text(query))
-        conn.commit()
+db = CarsDB.create_connection(user, password, host, port, name)
 
 
-def get_last_row():
-    # Retrieve the last number inserted inside the 'numbers'
-    with db.connect() as conn:
-        query = """SELECT * FROM cars"""
-
-        for result in conn.execute(text(query)):  
-            print(result)
+def write_value(car_info):
+    print("= Write start =")
+    db.insert_value(car_info)
 
 
 if __name__ == '__main__':
-    print('== Application started..')
+    print('= Application started =')
     
     k = 0
     while True:
-        time.sleep(5)
+        time.sleep(1)
         k += 1
-        add_new_row(k)
-        print('The last value insterted is: {}'.format(get_last_row()))
+        car_info = CarInfo('/auto.html', 'Benz', 16, 24, "Рома", "", "url_img", 33, "CA 3068 KC", 'WDDNG7DB3CA474969')
+        write_value(car_info)
+        #add_new_row(k)
+        #print(get_last_row())

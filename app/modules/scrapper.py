@@ -6,8 +6,6 @@
 
 import requests
 from bs4 import BeautifulSoup
-import re
-from src import db_start, db_check
 
 
 URL_BASE = "https://auto.ria.com/uk"
@@ -69,7 +67,3 @@ else:
     car["car_vin"] = soup.find(class_="vin-code").text.strip()
 
 print(car)
-
-print(db_check.create_connection())
-
-# print(db_start.start_db())

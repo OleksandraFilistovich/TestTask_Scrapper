@@ -1,16 +1,17 @@
 import time
-import random
+import os
 
 from sqlalchemy import create_engine, text, select
 
-db_name = 'database'
-db_user = 'username'
-db_pass = 'password'
-db_host = 'db'
-db_port = '5432'
+
+db_name = os.environ.get('POSTGRES_DB')
+db_user = os.environ.get('POSTGRES_USER')
+db_pass = os.environ.get('POSTGRES_PASSWORD')
+db_host = os.environ.get('POSTGRES_HOST')
+db_port = os.environ.get('POSTGRES_PORT')
 
 # Connecto to the database
-db_string = 'postgresql://{}:{}@{}:{}/{}'.format(db_user, db_pass, db_host, db_port, db_name)
+db_string = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 db = create_engine(db_string)
 
 def add_new_row(n):
@@ -18,7 +19,6 @@ def add_new_row(n):
         query = f"""INSERT INTO cars (url) VALUES ({n});"""
         result = conn.execute(text(query))
         conn.commit()
-        print(f"===RESULT==={result}")
 
 
 def get_last_row():

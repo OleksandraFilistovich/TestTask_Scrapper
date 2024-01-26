@@ -2,6 +2,9 @@ version: "3.8"
 services:
   app :
     build: ./app/
+    environment:
+      TZ: Europe/Kiev
     env_file: .env
   db:
     build: ./database/
+  

@@ -19,3 +19,7 @@ STRUCTURE & REMARKS:
 - app/modules/database.py works with db connection and insertion of data
 - app/modules/scrapper.py scraps data from website and returns them (function page_processing() is long, might need rework)
 - app/modules/car.py is a dataclass for car info to be more easy to work with
+
+todo:
+- phone number unmask
+- db dump to file

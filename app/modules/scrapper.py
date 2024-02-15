@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 
-from modules.car import CarInfo
+from .car import CarInfo
 
 URL_BASE = "https://auto.ria.com/uk"
 URL_SEARCH = "/car/used/?page="

@@ -16,7 +16,7 @@ class Bot:
         thread = threading.current_thread()
         name = thread.name
         print('Thread name:', name, n)
-        time.sleep(random.randint(5, 10))
+        time.sleep(random.randint(1, 2))
         self.data[n] = 'sdfdsf'
 
     def clear_threads(self):
@@ -51,6 +51,8 @@ class Bot:
                     time.sleep(0.1)
                 
                 x = threading.Thread(target=self.foo, name=f'New name {i}', daemon=True, args=(i,))
+                ##
+                self.flags_for_stop[i] = False
                 x.start()
                 self.threads_list.append(x)
     

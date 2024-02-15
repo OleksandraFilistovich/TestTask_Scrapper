@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Table, create_engine
 from sqlalchemy.orm import DeclarativeBase
 
-from modules.car import CarInfo
+from .car import CarInfo
 
 
 class Base(DeclarativeBase):

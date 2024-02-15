@@ -1,5 +1,5 @@
 import time
-import threading
+import multiprocessing
 
 from app.modules.scrapper import DataScrapper
 
@@ -8,18 +8,19 @@ PAGE_START = 1
 
 class Bot:
     def __init__(self):
-        self.threads_list: list[threading.Thread] = []
-        self.max_threads = 5
+        self.process_list: list[multiprocessing.Process] = []
+        self.max_processes = 5
         self.flags_for_stop = {}
         self.page = PAGE_START
+        #!
         self.pages_end = False
         self.PAGES_END_FLAG = False
         self.cars: list = {}
 
-    def clear_threads(self):
-        for thread in self.threads_list[:]:
-            if not thread.is_alive():
-                self.threads_list.remove(thread)
+    def clear_processes(self):
+        for process in self.process_list[:]:
+            if not process.is_alive():
+                self.process_list.remove(process)
 
     def bulk_save(self):
         pass
@@ -27,26 +28,26 @@ class Bot:
     def run(self):
         while not self.PAGES_END_FLAG:
             
-            self.clear_threads()
+            self.clear_processes()
             
             while True:
-                if len(self.threads_list) < self.max_threads:
+                if len(self.process_list) < self.max_processes:
                     break
-                self.clear_threads()
+                self.clear_processes()
                 time.sleep(0.1)
 
-            x = threading.Thread(target=self.collecting_info, name=f'Thread {self.page}', daemon=True, args=(self.page,))
+            x = multiprocessing.Process(target=self.collecting_info, name=f'Process {self.page}', args=(self.page,))
             x.start()
 
             print(f"=== {x.name} ===")
             self.page += 1
 
-            self.threads_list.append(x)
+            self.process_list.append(x)
 
             self.bulk_save()
 
-        for thread in self.threads_list:
-            thread.join()
+        for process in self.process_list:
+            process.join()
 
     def collecting_info(self, page: int):
         """Goes through found car pages in bunches,
@@ -65,9 +66,9 @@ class Bot:
         for link in links:
             car = scrapper.page_processing(link)
             self.cars[car.url] = car
-            thread = threading.current_thread()
-            name = thread.name
-            print(f"In thread {name}: {car.url}")
+            process = multiprocessing.current_process()
+            name = process.name
+            print(f"In process {name}: {car.url}")
 
             time.sleep(0.1)
 

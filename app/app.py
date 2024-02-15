@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 
 from modules.database import CarsDB
-from modules.scrapper import links_search, page_processing
+from modules.scrapper import DataScrapper
 
 
 name = os.environ.get("POSTGRES_DB")
@@ -37,16 +37,17 @@ def collecting_info(starting_page: int, db):
     print("= Links search start =")
     print(f"= {starting_page} page search =")
 
-    links = links_search(starting_page)
+    scrapper = DataScrapper()
+    links = scrapper.links(starting_page)
     page = starting_page + 1
 
     while links:
         for link in links:
-            car = page_processing(link)
+            car = scrapper.page_processing(link)
             write_value(car, db)
 
         print(f"= {page} page search =")
-        links = links_search(page)
+        links = scrapper.links(page)
         page += 1
 
     print("= Pages ended =")

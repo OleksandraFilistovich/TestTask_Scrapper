@@ -10,12 +10,11 @@ class Bot:
     def __init__(self):
         self.process_list: list[multiprocessing.Process] = []
         self.max_processes = 5
-        self.flags_for_stop = {}
         self.page = PAGE_START
-        #!
-        self.pages_end = False
-        self.PAGES_END_FLAG = False
-        self.cars: list = {}
+        self.PAGES_END_FLAG = multiprocessing.Queue()
+        self.cars_queue = multiprocessing.Queue()
+        self.cars: list = []
+
 
     def clear_processes(self):
         for process in self.process_list[:]:
@@ -23,28 +22,29 @@ class Bot:
                 self.process_list.remove(process)
 
     def bulk_save(self):
-        pass
+        for i in iter(self.cars_queue.get, 'STOP'):
+            self.cars.append(i)
+            return len(self.cars)
 
     def run(self):
-        while not self.PAGES_END_FLAG:
-            
+        while self.PAGES_END_FLAG.empty():
+
             self.clear_processes()
             
             while True:
                 if len(self.process_list) < self.max_processes:
                     break
                 self.clear_processes()
+                print(self.bulk_save())
                 time.sleep(0.1)
 
-            x = multiprocessing.Process(target=self.collecting_info, name=f'Process {self.page}', args=(self.page,))
+            x = multiprocessing.Process(target=self.collecting_info, daemon=True, name=f'Process {self.page}', args=(self.page,))
             x.start()
 
             print(f"=== {x.name} ===")
             self.page += 1
 
             self.process_list.append(x)
-
-            self.bulk_save()
 
         for process in self.process_list:
             process.join()
@@ -60,12 +60,14 @@ class Bot:
         links = scrapper.links(page)
 
         if not links:
-            self.PAGES_END_FLAG = True
+            self.PAGES_END_FLAG.put(True)
             print("= Pages ended =")
+
             return
         for link in links:
             car = scrapper.page_processing(link)
-            self.cars[car.url] = car
+            self.cars_queue.put(car)
+
             process = multiprocessing.current_process()
             name = process.name
             print(f"In process {name}: {car.url}")

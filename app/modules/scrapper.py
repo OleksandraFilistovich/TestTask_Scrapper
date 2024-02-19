@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+#from playwright.sync_api import sync_playwright
 
 from .car import CarInfo
 
@@ -9,6 +10,11 @@ URL_SEARCH = "/car/used/?page="
 
 class DataScrapper:
 
+    def get_html(self, url: str):
+        page = requests.get(url)
+        html_content = page.content
+        return html_content
+
     def links(self, page_number: int) -> list[str]:
         """Goes through the page with advertisments.
         Collects and returns links to the pages with cars in them."""
@@ -16,8 +22,8 @@ class DataScrapper:
         links = []
         url_to_search = URL_SEARCH + str(page_number)
 
-        page = requests.get(URL_BASE + url_to_search)
-        soup = BeautifulSoup(page.content, "html.parser")
+        html_content = self.get_html(URL_BASE + url_to_search)
+        soup = BeautifulSoup(html_content, "html.parser")
 
         results = soup.find_all("section", class_="ticket-item")
 
@@ -48,6 +54,10 @@ class DataScrapper:
         username = soup_data.find(class_="seller_info_name")
         if username:
             return username.text.strip()
+    
+    #  !PhoneNumber
+    def _phone_number(self, soup_data) -> str:
+        return ''
 
     @staticmethod
     def _image_url(soup_data) -> str:
@@ -80,9 +90,9 @@ class DataScrapper:
     def page_processing(self, url: str) -> CarInfo:
         """Collects data of the car.
         Returns it as CarInfo type."""
-
-        page = requests.get(URL_BASE + url)
-        soup = BeautifulSoup(page.content, "html.parser")
+        
+        html_content = self.get_html(URL_BASE + url)
+        soup = BeautifulSoup(html_content, "html.parser")
 
         car = CarInfo()
 
@@ -92,13 +102,28 @@ class DataScrapper:
         car.price_usd = self._price(soup)
         car.odometer = self._odometer(soup)
         car.username = self._username(soup)
-
-        #  !PhoneNumber
-        car.phone_number = ""
-
+        car.phone_number = self._phone_number(soup)
         car.image_url = self._image_url(soup)
         car.image_count = self._image_count(soup)
         car.car_number = self._car_number(soup)
         car.car_vin = self._car_vin(soup)
 
         return car
+
+
+class DataScrapperPW(DataScrapper):
+    def __init__(self, page):
+        self.page = page
+
+    def get_html(self, url: str):
+        self.page.goto(url)
+        html_content = self.page.content()
+        return html_content
+    
+    def _phone_number(self, soup_data) -> str:
+        button = self.page.get_by_role("link").get_by_text("показати")
+        button.nth(0).click()
+
+        phone_number = self.page.query_selector('.popup-successful-call-desk')
+        phone_number = phone_number.text_content()
+        return phone_number

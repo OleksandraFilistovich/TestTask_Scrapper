@@ -21,5 +21,4 @@ STRUCTURE & REMARKS:
 - app/modules/car.py is a dataclass for car info to be more easy to work with
 
 todo:
-- phone number unmask
 - db dump to file

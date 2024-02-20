@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-#from playwright.sync_api import sync_playwright
+import aiohttp
+import asyncio
 
 from .car import CarInfo
 
@@ -127,3 +128,53 @@ class DataScrapperPW(DataScrapper):
         phone_number = self.page.query_selector('.popup-successful-call-desk')
         phone_number = phone_number.text_content()
         return phone_number
+
+
+class DataScrapperAsync(DataScrapper):
+    def __init__(self, session):
+        self.session = session
+
+    async def get_html(self, url: str):
+        
+        async with self.session.get(url=url) as response:
+            response_text = await response.text()
+
+            return response_text
+    
+    async def page_processing(self, url: str) -> CarInfo:
+        html_content = await self.get_html(URL_BASE + url)
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        car = CarInfo()
+
+        car.url = url
+        car.title = soup.find("h1", class_="head").text.strip()
+
+        car.price_usd = self._price(soup)
+        car.odometer = self._odometer(soup)
+        car.username = self._username(soup)
+        car.phone_number = self._phone_number(soup)
+        car.image_url = self._image_url(soup)
+        car.image_count = self._image_count(soup)
+        car.car_number = self._car_number(soup)
+        car.car_vin = self._car_vin(soup)
+
+        return car
+    
+    async def links(self, page_number: int) -> list[str]:
+        
+        links = []
+        url_to_search = URL_SEARCH + str(page_number)
+        
+        html_content = await self.get_html(URL_BASE + url_to_search)
+        soup = BeautifulSoup(html_content, "html.parser")
+
+        results = soup.find_all("section", class_="ticket-item")
+
+        if len(results) == 0:
+            return None
+
+        for result in results:
+            div = result.find("div", class_="hide")
+            links.append(div.get("data-link-to-view"))
+        return links

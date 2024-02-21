@@ -135,13 +135,14 @@ class DataScrapperAsync(DataScrapper):
         self.session = session
 
     async def get_html(self, url: str):
-        
+        """Asynchronous requests to website."""
         async with self.session.get(url=url) as response:
             response_text = await response.text()
 
             return response_text
     
     async def page_processing(self, url: str) -> CarInfo:
+        #  ? Just change to await for get_html
         html_content = await self.get_html(URL_BASE + url)
         soup = BeautifulSoup(html_content, "html.parser")
 
@@ -165,7 +166,8 @@ class DataScrapperAsync(DataScrapper):
         
         links = []
         url_to_search = URL_SEARCH + str(page_number)
-        
+
+        #  ? Just change to await for get_html
         html_content = await self.get_html(URL_BASE + url_to_search)
         soup = BeautifulSoup(html_content, "html.parser")
 

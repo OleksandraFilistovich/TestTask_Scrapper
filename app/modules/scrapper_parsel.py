@@ -114,3 +114,60 @@ class DataScrapperParsel:
         car.car_vin = self._car_vin(selector)
 
         return car
+
+
+class DataScrapperParselAsync(DataScrapperParsel):
+    async def get_html(self, url: str):
+        """Get HTML from given url."""
+
+        await self.browser_page.goto(url)
+        html_content = await self.browser_page.content()
+
+        return html_content
+    
+    async def collect_links(self, page_num: int) -> list[str]:
+        """Returns links to pages with cars."""
+
+        url_to_search = URL_SEARCH + str(page_num)
+
+        #  ? Just change to await for get_html
+        html_content = await self.get_html(URL_BASE + url_to_search)
+        selector = Selector(text=html_content)
+
+        xpath_query = '//a[@class="m-link-ticket"]/@href'
+        links = selector.xpath(xpath_query).getall()
+
+        return links
+    
+    async def collecting_data(self, url: str):
+        """Collecting car data from page."""
+
+        car = CarInfo()
+        #  ? Just change to await for get_html
+        html_content = await self.get_html(url)
+        selector = Selector(text=html_content)
+
+        car.url = url
+        car.title = selector.xpath('//h1[@class="head"]/text()').get()
+
+        car.price_usd = self._price(selector)
+        car.odometer = self._odometer(selector)
+        car.username = self._username(selector)
+        car.phone_number = self._phone_number()
+        car.image_url = self._image_url(selector)
+        car.images_count = self._image_count(selector)
+        car.car_number = self._car_number(selector)
+        car.car_vin = self._car_vin(selector)
+
+        print("==Found one=")
+        return car
+    
+    async def _phone_number(self) -> str:
+        #  ? Just change to await
+        button = await self.browser_page.get_by_role("link")
+        await button.get_by_text("показати").nth(0).click()
+
+        class_name = '.popup-successful-call-desk'
+        phone_number = await self.browser_page.query_selector(class_name)
+
+        return phone_number.text_content()

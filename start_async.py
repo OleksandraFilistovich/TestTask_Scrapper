@@ -21,11 +21,11 @@ class Bot:
     async def main(self):
         async with aiohttp.ClientSession() as session:
 
-            while True:
+            while not self.pages_end:
                 while len(self.tasks) >= self.max_tasks:
                     await asyncio.sleep(0.1)
 
-                    for task in self.tasks:
+                    for task in self.tasks[:]:
                         if task.done():
                             self.tasks.remove(task)
 

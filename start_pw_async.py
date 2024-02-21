@@ -1,5 +1,5 @@
 import asyncio
-from playwright.async_api import async_playwright, Playwright
+from playwright.async_api import async_playwright, Playwright, Page
 
 from app.modules.scrapper_parsel import DataScrapperParselAsync
 from app.modules.scrapper import DataScrapperAsync
@@ -18,7 +18,8 @@ class Bot:
     def bulk_save(self):
         return len(self.cars)
     
-    async def collecting_info(self, page_num: int, scrapper: DataScrapperParselAsync):
+    async def collecting_info(self, page_num: int, page: Page):
+        scrapper = DataScrapperParselAsync(page)
 
         print(f"= {page_num} page search =")
         links = await scrapper.collect_links(page_num)
@@ -26,45 +27,41 @@ class Bot:
         if not links:
             self.pages_end = True
             print("= Pages ended =")
-
+            await page.close()
             return
         
         for link in links:
-            print(link)
             car = await scrapper.collecting_data(link)
-            print(f"Found car: {car.url}")
+            print(f"Found car on {page_num}: {car.url}")
             self.cars.append(car)
 
         print(f"= {page_num} page ended =")
+        await page.close()
         return True
 
+    def clear_tasks(self):
+        for task in self.tasks[:]:
+            if task.done():
+                self.tasks.remove(task)
 
     async def main(self):
         async with async_playwright() as playwright:
-            chromium = playwright.chromium
-            browser = await chromium.launch()
-
-            browser_page = await browser.new_page()
-            #scrapper = DataScrapperParselAsync(browser_page)
-            scrapper = DataScrapperAsync(browser_page)
+            browser = await playwright.chromium.launch(headless=False)
+            context = await browser.new_context()
 
             while not self.pages_end:
-                
+                page = await context.new_page()
+
                 while len(self.tasks) >= self.max_tasks:
-
-                    await asyncio.sleep(0.1)
-
-                    for task in self.tasks[:]:
-                        if task.done():
-                            self.tasks.remove(task)
-                    
+                    self.clear_tasks()
+                    await asyncio.sleep(0.01)
+                else:
                     print(self.bulk_save())
 
                 print("==New==")
-                task = asyncio.create_task(self.collecting_info(self.page_num, scrapper))
+                task = asyncio.create_task(self.collecting_info(self.page_num, page))
                 self.tasks.append(task)
                 
-
                 self.page_num += 1
 
         await browser.close()

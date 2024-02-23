@@ -1,0 +1,9 @@
+sqlalchemy
+psycopg2-binary
+beautifulsoup4
+requests
+asyncio
+aiohttp
+parsel
+playwright
+redis == 4.5.5

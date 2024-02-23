@@ -45,7 +45,9 @@ class DataScrapperParsel:
         odometer = selector.xpath(xpath).get()
         if odometer:
             odometer = int(f"{odometer.strip()}000")
-        return odometer
+            return odometer
+        else:
+            return 0
 
     @staticmethod
     def _username(selector: Selector) -> str:
@@ -86,7 +88,10 @@ class DataScrapperParsel:
     def _car_number(selector: Selector) -> str:
         xpath = '//span[@class="state-num ua"]/text()'
         number = selector.xpath(xpath).get()
-        return number
+        if number:
+            return number
+        else:
+            return ''
     
     @staticmethod
     def _car_vin(selector: Selector) -> str:

@@ -2,7 +2,7 @@ import redis
 from datetime import datetime
 
 
-host_rs = 'localhost'
+host_rs = 'redis'
 port_rs = 6379
 password_rs = ''
 
@@ -34,6 +34,7 @@ class Cache_Tasks:
             self.tasks.set(task, '')
     
     def get_tasks(self) -> list:
+        """Returns not started tasks."""
         tasks = []
         keys = self.tasks.keys()
 
@@ -52,23 +53,35 @@ class Cache_Tasks:
         for key in keys:
             self.tasks.delete(key)
 
-    def add_result(self, task: int, result: dict) -> None:
-        for key in result.keys():
-            self.results.hset(name=task, key=key, value=result[key])
+    def add_result(self, task: int, car: dict) -> None:
+        for key in car.keys():
+            self.results.hset(name=task, key=key, value=car[key])
         self.tasks.delete(task)
+    
+    def add_results(self, task: int, cars: list[dict]) -> None:
+        ind = 0
+        for car in cars:
+            ind += 1
+            for key in car.keys():
+                name = f'{task}-{ind}'
+                self.results.hset(name=name, key=key, value=car[key])
+        #self.tasks.delete(task)
     
     def get_results(self) -> dict:
         results = {}
-        tasks = self.results.keys()
-        print(tasks)
+        cars = self.results.keys()
+        tasks_nums = set([car[:car.index('-')] for car in cars])
 
-        for task in tasks:
-            results[task] = {}
-            keys =  self.results.hkeys(task)
+        for car in cars:
+            results[car] = {}
+            keys =  self.results.hkeys(car)
             
             for key in keys:
-                results[task][key] = self.results.hget(task, key)
-            self.results.delete(task)
+                results[car][key] = self.results.hget(car, key)
+            self.results.delete(car)
+            
+        for task in tasks_nums:
+            self.tasks.delete(task)
         
         return results
 
@@ -80,15 +93,17 @@ def cache_func():
     cache = Cache_Tasks()
     cache.clean_tasks()
 
-    cache.add_tasks([1,2,3,4,5])
+    cache.add_tasks([1,2,30,4,5])
     print(cache.get_tasks())
-    cache.update_task(2)
+    #cache.update_task(2)
     print(cache.get_tasks())
     
     #cache.clean_tasks()
     #print(cache.get_tasks())
     
-    cache.add_result(2,car_example)
+    cache.add_results(2,[car_example,car_example])
+    cache.add_results(30,[car_example,car_example])
+    print(cache.get_results())
     print(cache.get_results())
     print(cache.get_tasks())
 

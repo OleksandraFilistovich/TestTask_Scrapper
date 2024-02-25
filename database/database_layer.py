@@ -48,6 +48,11 @@ class CarsDB(TableDB):
                 except Exception as e:
                     conn.rollback()
                     print(f"! Can't insert value.! {e}")
+    
+    #!FIX
+    def cars_take(self) -> list:
+        cars = self.session.query(Cars).all()
+        return [cars.__dict__['title'] for car in cars]
 
 class TasksDB(TableDB):
     """Class to work with 'Tasks' table."""
@@ -64,15 +69,8 @@ class TasksDB(TableDB):
                 except Exception as e:
                     conn.rollback()
                     print(f"! Can't insert value.! {e}")
-            conn.execute(Tasks.__table__.insert(), {'page_number' : 50, 'is_complete' : True})
-            conn.commit()
-            print(f"= Tasks successfully added =")
+            print(f"= Tasks successfully added to db =")
     
     def tasks_take(self) -> list:
         tasks = self.session.query(Tasks).where(Tasks.is_complete == False).all()
-        l = [task['page_number'] for task in tasks]
-        print(l)
-
-
-
-#id page_number in_progress is_complete
+        return [task.__dict__['page_number'] for task in tasks]

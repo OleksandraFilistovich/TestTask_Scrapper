@@ -118,6 +118,8 @@ class Orchestrator:
         print(results_to_db)
 
         cars_db.bulk_insert(list(results_to_db.values()))
-        print(cars_db.cars_take())
+
+        #db read needs fix
+        #print(cars_db.cars_take())
 
         await browser.close()

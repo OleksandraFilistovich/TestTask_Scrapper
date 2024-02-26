@@ -36,8 +36,10 @@ class DataScrapperParsel:
     @staticmethod
     def _price(selector: Selector) -> int:
         price = selector.xpath('//div[@class="price_value"]/strong/text()')
-        price = "".join([elem for elem in price.get() if elem.isdigit()])
-        return price
+        price = price.get()
+        if price:
+            return "".join([elem for elem in price if elem.isdigit()])
+        return 0
     
     @staticmethod
     def _odometer(selector: Selector) -> int:
@@ -45,7 +47,9 @@ class DataScrapperParsel:
         odometer = selector.xpath(xpath).get()
         if odometer:
             odometer = int(f"{odometer.strip()}000")
-        return odometer
+            return odometer
+        else:
+            return 0
 
     @staticmethod
     def _username(selector: Selector) -> str:
@@ -74,25 +78,37 @@ class DataScrapperParsel:
     def _image_url(selector: Selector) -> str:
         xpath = '//img[@class="outline m-auto"]/@src'
         url = selector.xpath(xpath).get()
-        return url
+        if url:
+            return url
+        else:
+            return ''
     
     @staticmethod
     def _image_count(selector: Selector) -> str:
         xpath = '//span[@class="count"]/span[@class="mhide"]/text()'
-        count = selector.xpath(xpath).get()[2:]
-        return count
+        count = selector.xpath(xpath).get()
+        if count:
+            return count[2:]
+        else:
+            return 0
     
     @staticmethod
     def _car_number(selector: Selector) -> str:
         xpath = '//span[@class="state-num ua"]/text()'
         number = selector.xpath(xpath).get()
-        return number
+        if number:
+            return number
+        else:
+            return ''
     
     @staticmethod
     def _car_vin(selector: Selector) -> str:
         xpath = '//span[@class="label-vin" or @class="vin-code"]/text()'
         vin = selector.xpath(xpath).get()
-        return vin
+        if vin:
+            return vin
+        else:
+            return ''
 
     def collecting_data(self, url: str):
         """Collecting car data from page."""
@@ -170,4 +186,9 @@ class DataScrapperParselAsync(DataScrapperParsel):
         class_name = '.popup-successful-call-desk'
         phone_number = await self.browser_page.query_selector(class_name)
 
-        return await phone_number.text_content()
+        phone_number =  await phone_number.text_content()
+        
+        if phone_number:
+            return phone_number
+        else:
+            return ''

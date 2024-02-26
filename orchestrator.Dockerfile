@@ -8,10 +8,10 @@
 #RUN echo "== Created DB.."
 
 
-FROM python:3.10-slim as app
-WORKDIR /app
+FROM python:3.10-slim as orchestrator
+WORKDIR /orchestrator
 
-COPY . /app/
+COPY . .
 
 ADD requirements.txt requirements.txt
 RUN pip install --upgrade pip
@@ -20,7 +20,7 @@ RUN pip install -r requirements.txt
 RUN playwright install && \
     playwright install-deps
 
-RUN echo "= Installed dependencies ="
+RUN echo "= Installed dependencies for orchestrator ="
 
 #CMD ["python", "-u", "utils/rs.py"]
 CMD sh -c "sleep 5 && python -m m_orchestrator"

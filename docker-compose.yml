@@ -1,7 +1,17 @@
 version: "3.8"
 services:
-  app:
-    build: .
+  orchestrator:
+    build:
+      dockerfile: orchestrator.Dockerfile
+    environment:
+      TZ: Europe/Kiev
+    env_file: .env
+    depends_on:
+      - db
+  
+  worker:
+    build:
+      dockerfile: worker.Dockerfile
     environment:
       TZ: Europe/Kiev
     env_file: .env

@@ -1,11 +1,11 @@
 import asyncio
-
 from m_orchestrator.orchestaror import Orchestrator
-from utils.rs import Cache_Tasks
 
-o = Orchestrator()
-print("Orchestrator launched")
-#asyncio.run(o.run())
-#o.bulk_save()
-#async def load():
-#    asyncio.run(check())
+
+async def main():
+    orchestrator = Orchestrator()
+    print("Orchestrator launched")
+    await orchestrator.run()
+
+if __name__ == '__main__':
+    asyncio.run(main())

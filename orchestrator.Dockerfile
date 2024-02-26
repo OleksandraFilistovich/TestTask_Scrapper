@@ -17,8 +17,6 @@ ADD requirements.txt requirements.txt
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-RUN playwright install && \
-    playwright install-deps
 
 RUN echo "= Installed dependencies for orchestrator ="
 

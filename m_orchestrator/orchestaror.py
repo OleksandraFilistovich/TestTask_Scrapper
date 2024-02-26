@@ -1,7 +1,5 @@
 import asyncio
-from playwright.async_api import async_playwright, BrowserContext
 
-from m_worker.worker import Worker
 from database.database_layer import CarsDB,TasksDB
 from utils.car import CarInfo
 from utils.rs import Cache_Tasks
@@ -38,13 +36,13 @@ tasks_db = TasksDB(user_db, password_db, host_db, port_db, name_db)
 
 cache = Cache_Tasks()
 
+#  *Creates tasks inside Tasks table
+tasks_db.populate(1,2)
+
 
 class Orchestrator:
     def __init__(self) -> None:
-        self.tasks_list = []
-        self.max_tasks = 3
         self.cars_done = []
-        #print("Orchestrator created.")
     
     def reset_tasks(self):
         pass
@@ -71,55 +69,21 @@ class Orchestrator:
 
         cars_db.bulk_insert(list_values)
     
-    def clear_tasks(self):
-        for task in self.tasks_list[:]:
-            if task.done():
-                self.tasks_list.remove(task)
-
-    async def run_worker(self, context : BrowserContext, page_num: str):
-        while len(self.tasks_list) >= self.max_tasks:
-            self.clear_tasks()
-            await asyncio.sleep(0.01)
-
-        worker = Worker(page_num)
-        print(f'create worker {page_num}')
-
-        browser_page = await context.new_page()
-
-        task = asyncio.create_task(worker.collecting_info(browser_page,
-                                                          cache))
-        self.tasks_list.append(task)
 
     async def run(self):
-        #  *Creates tasks inside Tasks table
-        tasks_db.populate(1,2)
-        #  *Takes not done tasks from Tasks table
-        tasks_to_redis = tasks_db.tasks_take()
-        #  *Adds tasks to work on
-        cache.add_tasks(tasks_to_redis)
-        #  *Takes not done tasks from redis
-        tasks_to_do = cache.get_tasks()
-        
-        print(tasks_to_do)
-
-        async with async_playwright() as playwright:
-            browser = await playwright.chromium.launch(headless=True)
-            context = await browser.new_context()
+        while True:
+            #  *Takes not done tasks from Tasks table
+            tasks_to_redis = tasks_db.tasks_take()
+            #  *Adds tasks to work on
+            cache.add_tasks(tasks_to_redis)
             
-            for task in tasks_to_do:
-                pass
-                await self.run_worker(context, task)
-            
-            while len(self.tasks_list) > 0:
-                self.clear_tasks()
-                await asyncio.sleep(0.01)
-        
-        results_to_db = cache.get_results()
-        print(results_to_db)
+            await asyncio.sleep(5)
 
-        cars_db.bulk_insert(list(results_to_db.values()))
-
-        #db read needs fix
-        #print(cars_db.cars_take())
-
-        await browser.close()
+            results_to_db = cache.get_results()
+            if len(results_to_db) < 10:
+                continue
+            else:
+                print(len(results_to_db))
+                cars_db.bulk_insert(list(results_to_db.values()))
+                break
+        print("ORCHESTRATOR STOPPED")

@@ -1,3 +1,12 @@
-from utils.rs import Cache_Tasks
+import asyncio
+from m_worker.worker import Worker
 
-print("Worker launched")
+
+async def main():
+    worker = Worker()
+    print("Worker launched")
+    await worker.init_playwright()
+    await worker.run()
+
+if __name__ == '__main__':
+    asyncio.run(main())

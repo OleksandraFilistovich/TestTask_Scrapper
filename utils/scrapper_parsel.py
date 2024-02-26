@@ -1,19 +1,20 @@
-from playwright.async_api import Page
 from parsel import Selector
+from playwright.async_api import Page
 
 from .car import CarInfo
+
 
 URL_BASE = "https://auto.ria.com/uk"
 URL_SEARCH = "/car/used/?page="
 
-
 class DataScrapperParsel:
+    """Class for scrapping used cars info. Synchronous."""
 
     def __init__(self, browser_page: Page) -> None:
         self.browser_page = browser_page
 
-    def get_html(self, url: str):
-        """Get HTML from given url."""
+    def get_html(self, url: str) -> str:
+        """Playwright gets HTML from given url."""
 
         self.browser_page.goto(url)
         html_content = self.browser_page.content()
@@ -35,6 +36,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _price(selector: Selector) -> int:
+        """Searches for price and normalizes it, if found."""
         price = selector.xpath('//div[@class="price_value"]/strong/text()')
         price = price.get()
         if price:
@@ -43,6 +45,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _odometer(selector: Selector) -> int:
+        """Searches for odometer count and normalizes it, if found."""
         xpath = '//div[@class="base-information bold"]/span[@class="size18"]/text()'
         odometer = selector.xpath(xpath).get()
         if odometer:
@@ -53,6 +56,7 @@ class DataScrapperParsel:
 
     @staticmethod
     def _username(selector: Selector) -> str:
+        """Searches for username or company name, if exist."""
         xpath = '//div[contains(@class, "seller_info_name bold")]/text()'
         name = selector.xpath(xpath).get()
 
@@ -66,6 +70,7 @@ class DataScrapperParsel:
         return name.strip()
     
     def _phone_number(self) -> str:
+        """Clicks button to reveal phone numbers collects first one."""
         button = self.browser_page.get_by_role("link")
         button.get_by_text("показати").nth(0).click()
 
@@ -76,6 +81,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _image_url(selector: Selector) -> str:
+        """Searches for first car image url, if exist."""
         xpath = '//img[@class="outline m-auto"]/@src'
         url = selector.xpath(xpath).get()
         if url:
@@ -85,6 +91,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _image_count(selector: Selector) -> str:
+        """Returns amount of images given on the car page."""
         xpath = '//span[@class="count"]/span[@class="mhide"]/text()'
         count = selector.xpath(xpath).get()
         if count:
@@ -94,6 +101,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _car_number(selector: Selector) -> str:
+        """Searches car number. Can be absent for not new cars."""
         xpath = '//span[@class="state-num ua"]/text()'
         number = selector.xpath(xpath).get()
         if number:
@@ -103,6 +111,7 @@ class DataScrapperParsel:
     
     @staticmethod
     def _car_vin(selector: Selector) -> str:
+        """Searcher car vin, if exists."""
         xpath = '//span[@class="label-vin" or @class="vin-code"]/text()'
         vin = selector.xpath(xpath).get()
         if vin:
@@ -133,8 +142,10 @@ class DataScrapperParsel:
 
 
 class DataScrapperParselAsync(DataScrapperParsel):
+    """Class for scrapping used cars info with parsel. Asynchronous."""
+
     async def get_html(self, url: str):
-        """Get HTML from given url."""
+        """Playwright async gets HTML from given url."""
 
         await self.browser_page.goto(url, wait_until="load", timeout=60000)
         html_content = await self.browser_page.content()
@@ -146,7 +157,7 @@ class DataScrapperParselAsync(DataScrapperParsel):
 
         url_to_search = URL_SEARCH + str(page_num)
 
-        #  ? Just change to await for get_html
+        #  *Just change to await for get_html
         html_content = await self.get_html(URL_BASE + url_to_search)
         selector = Selector(text=html_content)
 
@@ -159,7 +170,7 @@ class DataScrapperParselAsync(DataScrapperParsel):
         """Collecting car data from page."""
 
         car = CarInfo()
-        #  ? Just change to await for get_html
+        #  *Just change to await for get_html
         html_content = await self.get_html(url)
         selector = Selector(text=html_content)
         
@@ -179,7 +190,8 @@ class DataScrapperParselAsync(DataScrapperParsel):
         return car
     
     async def _phone_number(self) -> str:
-        #  ? Just change to await
+        """Clicks button to reveal phone numbers collects first one."""
+        #  *Just change to await
         button = self.browser_page.get_by_role("link")
         await button.get_by_text("показати").nth(0).click()
 

@@ -19,25 +19,12 @@ class TableDB:
 
 class CarsDB(TableDB):
     """Class to work with 'Cars' table."""
-    __instance = None
-    
-    #  ?bulk can be used instead
-    def insert_value(self, value: CarInfo) -> None:
-        """Inserts info of the car into table if possible.
-        Writes exact exception if failed."""
-        with self.engine.connect() as conn:
-            try:
-                conn.execute(Cars.__table__.insert(), value.to_dict())
-                conn.commit()
-                print("= Data successfully added =")
-                print(value.to_dict())
-            except Exception as e:
-                conn.rollback()
-                print(f"! Can't insert value.! {e}")
-    
+
     def bulk_insert(self, list_values: list[CarInfo]) -> None:
-        """Inserts info from list of car into table if possible.
-        Writes exact exception if failed."""
+        """
+        Inserts info from list of car into table if possible.
+        Writes exact exception if failed.
+        """
         with self.engine.connect() as conn:
             for value in list_values:
                 try:
@@ -51,15 +38,15 @@ class CarsDB(TableDB):
     
     #!FIX
     def cars_take(self) -> list:
+        """Returns list of cars saved in table."""
         cars = self.session.query(Cars).all()
         return [cars.__dict__['title'] for car in cars]
 
 class TasksDB(TableDB):
     """Class to work with 'Tasks' table."""
-    __instance = None
-    
-    def populate(self, start_page: int, end_page: int) -> None:
 
+    def populate(self, start_page: int, end_page: int) -> None:
+        """Adds pages numbers as tasks to table."""
         with self.engine.connect() as conn:
             for page in range(start_page, end_page+1):
                 value = {'page_number' : page}
@@ -72,5 +59,6 @@ class TasksDB(TableDB):
             print(f"= Tasks successfully added to db =")
     
     def tasks_take(self) -> list:
+        """Returns all not completed tasks."""
         tasks = self.session.query(Tasks).where(Tasks.is_complete == False).all()
         return [task.__dict__['page_number'] for task in tasks]

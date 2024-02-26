@@ -6,18 +6,6 @@ from utils.rs import Cache_Tasks
 
 import os
 
-#id page_number in_progress is_complete
-# ?TEST DATA
-car_example = {'car_number': '',
-               'car_vin': 'WVGZZZ5NZKM029545',
-               'image_url': 'https://cdn3.jpg',
-               'images_count': '196',
-               'odometer': 240000,
-               'phone_number': '(067) 314 04 36',
-               'price_usd': '25700',
-               'title': ' Volkswagen',
-               'url': 'https://auto.ria.com/',
-               'username': 'Сергій'}
 
 name_db = os.environ.get("POSTGRES_DB")
 user_db = os.environ.get("POSTGRES_USER")
@@ -31,59 +19,40 @@ number_db_rs = os.environ.get("REDIS_DATABASES")
 password_rs = os.environ.get("REDIS_PASSWORD")
 
 
+#  *Connection to DB tables
 cars_db = CarsDB(user_db, password_db, host_db, port_db, name_db)
 tasks_db = TasksDB(user_db, password_db, host_db, port_db, name_db)
 
-cache = Cache_Tasks()
+#  *Connection to redis
+CACHE = Cache_Tasks()
 
 #  *Creates tasks inside Tasks table
 tasks_db.populate(1,2)
 
 
 class Orchestrator:
-    def __init__(self) -> None:
-        self.cars_done = []
-    
-    def reset_tasks(self):
-        pass
+    """
+    Class cycles and operates data, takes from, saves to DB.
+    Stores tasks in redis for worker to see.
+    """
 
-    def plan_tasks(self):
-        pass
-
-    def update_tasks(self):
-        pass
-
-    def take_results(self):
-        pass
-
-    def bulk_save(self, list_values: list[CarInfo] = []):
-
-        print("Start bulk")
-        list_values.append(car_example.copy())
-        car_example['url'] = car_example['url'] + '1'
-        list_values.append(car_example.copy())
-        car_example['url'] = car_example['url'] + '2'
-        list_values.append(car_example.copy())
-        car_example['url'] = car_example['url'] + '3'
-        list_values.append(car_example.copy())
-
-        cars_db.bulk_insert(list_values)
-    
-
-    async def run(self):
+    async def run(self) -> None:
         while True:
             #  *Takes not done tasks from Tasks table
             tasks_to_redis = tasks_db.tasks_take()
-            #  *Adds tasks to work on
-            cache.add_tasks(tasks_to_redis)
+            #  *Adds tasks for worker to work on
+            CACHE.add_tasks(tasks_to_redis)
             
             await asyncio.sleep(5)
 
-            results_to_db = cache.get_results()
+            #  *Takes results and stores them inside DB
+            #  ?break for testing, real orchestrator runs indefinitely
+            results_to_db = CACHE.get_results()
             if len(results_to_db) < 10:
                 continue
             else:
                 print(len(results_to_db))
                 cars_db.bulk_insert(list(results_to_db.values()))
                 break
+
         print("ORCHESTRATOR STOPPED")

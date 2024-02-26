@@ -1,7 +1,6 @@
 import asyncio
 from playwright.async_api import async_playwright, Page, BrowserContext
 
-from utils.car import CarInfo
 from utils.rs import Cache_Tasks
 from utils.scrapper_parsel import DataScrapperParselAsync
 
@@ -9,6 +8,11 @@ from utils.scrapper_parsel import DataScrapperParselAsync
 CACHE = Cache_Tasks()
 
 class Worker:
+    """
+    Class works on scrapping webpages with parsel.
+    Updates tasks status and saves results to redis.
+    """
+
     def __init__(self):
         self.playwright = None
         self.browser = None
@@ -16,16 +20,23 @@ class Worker:
         self.max_tasks = 3
         self.cars: list = []
 
-    async def init_playwright(self):
+    async def init_playwright(self) -> None:
+        """Initialize playwright and browser as attributes."""
         self.playwright = await async_playwright().start()
         self.browser = await self.playwright.chromium.launch(headless=True)
 
-    def clear_tasks(self):
+    def clear_tasks(self) -> None:
+        """Checks tasks' status and removes done ones."""
         for task in self.tasks_list[:]:
             if task.done():
                 self.tasks_list.remove(task)
 
-    async def collecting_info(self, page: Page, page_num: int) -> list[CarInfo]:
+    async def collecting_info(self, page: Page, page_num: int) -> list[dict]:
+        """
+        Works with scrapper to collect data of cars from page
+        and writes it to redis.
+        Returns None when page is empty.
+        """
         scrapper = DataScrapperParselAsync(page)
 
         print(f"= {page_num} page search =")
@@ -45,7 +56,8 @@ class Worker:
         CACHE.add_results(page_num, self.cars)
         await page.close()
         
-    async def run_worker(self, context : BrowserContext, page_num: int):
+    async def run_worker(self, context : BrowserContext, page_num: int) -> None:
+        """Checks tasks amount and runs them."""
         while len(self.tasks_list) >= self.max_tasks:
             self.clear_tasks()
             await asyncio.sleep(0.01)
@@ -58,6 +70,7 @@ class Worker:
         self.tasks_list.append(task)
     
     async def run(self):
+        """Cycles to take tasks and run tasks workers."""
         context = await self.browser.new_context()
 
         while True:

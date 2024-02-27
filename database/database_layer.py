@@ -1,9 +1,12 @@
 import sqlalchemy as sq
 from sqlalchemy.orm import Session
-from database.models import Base, Cars, Tasks
 
 from utils.car import CarInfo
+from utils.logs import get_logger
+from database.models import Base, Cars, Tasks
 
+
+LOGGER = get_logger('DB')
 
 class TableDB:
     def __init__(self, user, password, host, port, name) -> None:
@@ -14,7 +17,7 @@ class TableDB:
         Base.metadata.create_all(self.engine)
         self.session = Session(bind=self.engine)
 
-        print("= Engine is running =")
+        LOGGER.info('Engine is running')
     
 
 class CarsDB(TableDB):
@@ -30,11 +33,11 @@ class CarsDB(TableDB):
                 try:
                     conn.execute(Cars.__table__.insert(), value)
                     conn.commit()
-                    print("= Data successfully added =")
-                    print(value)
                 except Exception as e:
                     conn.rollback()
-                    print(f"! Can't insert value.! {e}")
+                    LOGGER.error("Can't insert value to Cars table! {e}")
+                else:
+                    LOGGER.success(f'Data added to Cars DB')
     
     #!FIX
     def cars_take(self) -> list:
@@ -55,8 +58,9 @@ class TasksDB(TableDB):
                     conn.commit()
                 except Exception as e:
                     conn.rollback()
-                    print(f"! Can't insert value.! {e}")
-            print(f"= Tasks successfully added to db =")
+                    LOGGER.error("Can't insert value to Tasks table! {e}")
+                else:
+                    LOGGER.success(f'Tasks successfully added to DB.')
     
     def tasks_take(self) -> list:
         """Returns all not completed tasks."""

@@ -1,10 +1,9 @@
+import os
 import asyncio
 
-from database.database_layer import CarsDB,TasksDB
-from utils.car import CarInfo
 from utils.rs import Cache_Tasks
-
-import os
+from utils.logs import get_logger
+from database.database_layer import CarsDB,TasksDB
 
 
 name_db = os.environ.get("POSTGRES_DB")
@@ -18,6 +17,7 @@ port_rs = os.environ.get("REDIS_PORT")
 number_db_rs = os.environ.get("REDIS_DATABASES")
 password_rs = os.environ.get("REDIS_PASSWORD")
 
+LOGGER = get_logger("Orchestrator")
 
 #  *Connection to DB tables
 cars_db = CarsDB(user_db, password_db, host_db, port_db, name_db)
@@ -51,8 +51,8 @@ class Orchestrator:
             if len(results_to_db) < 10:
                 continue
             else:
-                print(len(results_to_db))
+                LOGGER.info(f'Collected {len(results_to_db)} cars info.')
                 cars_db.bulk_insert(list(results_to_db.values()))
                 break
 
-        print("ORCHESTRATOR STOPPED")
+        LOGGER.info('Orchestrator stopped.')

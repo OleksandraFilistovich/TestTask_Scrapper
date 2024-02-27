@@ -2,9 +2,11 @@ import asyncio
 from playwright.async_api import async_playwright, Page, BrowserContext
 
 from utils.rs import Cache_Tasks
+from utils.logs import get_logger
 from utils.scrapper_parsel import DataScrapperParselAsync
 
 
+LOGGER = get_logger('Worker')
 CACHE = Cache_Tasks()
 
 class Worker:
@@ -39,20 +41,20 @@ class Worker:
         """
         scrapper = DataScrapperParselAsync(page)
 
-        print(f"= {page_num} page search =")
+        LOGGER.info(f'{page_num} page search start')
         links = await scrapper.collect_links(page_num)
 
         if not links:
-            print("= Pages ended =")
+            LOGGER.info('pages ended')
             await page.close()
             return None
         
         for link in links:
             car = await scrapper.collecting_data(link)
-            print(f"Found car on {page_num}: {car.url}")
+            LOGGER.info(f'Found car on {page_num}: {car.url}')
             self.cars.append(car.to_dict())
 
-        print(f"= {page_num} page ended =")
+        LOGGER.info(f'{page_num} page ended')
         CACHE.add_results(page_num, self.cars)
         await page.close()
         
@@ -62,7 +64,7 @@ class Worker:
             self.clear_tasks()
             await asyncio.sleep(0.01)
 
-        print(f'worker took {page_num}')
+        LOGGER.info(f'worker took {page_num} page')
 
         browser_page = await context.new_page()
 
@@ -78,7 +80,7 @@ class Worker:
             tasks_to_do = CACHE.get_tasks()
             
             if len(tasks_to_do) >= 2:
-                print(tasks_to_do)
+                LOGGER.info(f'tasks to do: {tasks_to_do}')
 
                 for task in tasks_to_do:
                     await self.run_worker(context, task)
@@ -93,4 +95,4 @@ class Worker:
         await self.browser.close()
         await self.playwright.stop()
         
-        print("WORKER STOPPED")
+        LOGGER.info('Worker stopped.')

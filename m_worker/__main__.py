@@ -4,7 +4,6 @@ from m_worker.worker import Worker
 
 async def main():
     worker = Worker()
-    print("Worker launched")
     await worker.init_playwright()
     await worker.run()
 

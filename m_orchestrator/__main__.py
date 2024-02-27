@@ -4,7 +4,6 @@ from m_orchestrator.orchestaror import Orchestrator
 
 async def main():
     orchestrator = Orchestrator()
-    print("Orchestrator launched")
     await orchestrator.run()
 
 if __name__ == '__main__':

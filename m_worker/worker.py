@@ -1,13 +1,15 @@
 import asyncio
 from playwright.async_api import async_playwright, Page, BrowserContext
 
-from utils.rs import Cache_Tasks
+from utils.rs import Cache
 from utils.logs import get_logger
 from utils.scrapper_parsel import DataScrapperParselAsync
 
 
 LOGGER = get_logger('Worker')
-CACHE = Cache_Tasks()
+
+cache_0 = Cache(0)
+cache_1 = Cache(1)
 
 class Worker:
     """
@@ -55,7 +57,7 @@ class Worker:
             self.cars.append(car.to_dict())
 
         LOGGER.info(f'{page_num} page ended')
-        CACHE.add_results(page_num, self.cars)
+        cache_1.add_results(page_num, self.cars)
         await page.close()
         
     async def run_worker(self, context : BrowserContext, page_num: int) -> None:
@@ -77,7 +79,7 @@ class Worker:
 
         while True:
             #  *Takes not done tasks from redis
-            tasks_to_do = CACHE.get_tasks()
+            tasks_to_do = cache_0.get_tasks(self.max_tasks)
             
             if len(tasks_to_do) >= 2:
                 LOGGER.info(f'tasks to do: {tasks_to_do}')

@@ -4,31 +4,42 @@ import asyncio
 from utils.rs import Cache
 from utils.logs import get_logger
 from database.database_layer import CarsDB,TasksDB
+from database.database_layer_mongo import CarsDB as MongoCarsDB
+from database.database_layer_mongo import TasksDB as MongoTasksDB
 
 
-name_db = os.environ.get("POSTGRES_DB")
-user_db = os.environ.get("POSTGRES_USER")
-password_db = os.environ.get("POSTGRES_PASSWORD")
-host_db = os.environ.get("POSTGRES_HOST")
-port_db = os.environ.get("POSTGRES_PORT")
+#'mongo' or 'postgres'
+DATABASE = 'mongo'
 
+LOGGER = get_logger("Orchestrator")
+
+#  *Connection to DB tables
+if DATABASE == 'postgres':
+    name_db = os.environ.get("POSTGRES_DB")
+    user_db = os.environ.get("POSTGRES_USER")
+    password_db = os.environ.get("POSTGRES_PASSWORD")
+    host_db = os.environ.get("POSTGRES_HOST")
+    port_db = os.environ.get("POSTGRES_PORT")
+
+    cars_db = CarsDB(user_db, password_db,
+                     host_db, port_db, name_db)
+    tasks_db = TasksDB(user_db, password_db,
+                       host_db, port_db, name_db)
+elif DATABASE == 'mongo':
+    cars_db = MongoCarsDB()
+    tasks_db = MongoTasksDB()
+
+#  *Connection to redis
 host_rs = os.environ.get("REDIS_HOST")
 port_rs = os.environ.get("REDIS_PORT")
 number_db_rs = os.environ.get("REDIS_DATABASES")
 password_rs = os.environ.get("REDIS_PASSWORD")
 
-LOGGER = get_logger("Orchestrator")
-
-#  *Connection to DB tables
-cars_db = CarsDB(user_db, password_db, host_db, port_db, name_db)
-tasks_db = TasksDB(user_db, password_db, host_db, port_db, name_db)
-
-#  *Connection to redis
 cache_0 = Cache(0)
 cache_1 = Cache(1)
 
 #  *Creates tasks inside Tasks table
-tasks_db.populate(1,2)
+tasks_db.populate_tasks(1,2)
 
 
 class Orchestrator:
@@ -53,7 +64,7 @@ class Orchestrator:
                 continue
             else:
                 LOGGER.info(f'Collected {len(results_to_db)} cars info.')
-                cars_db.bulk_insert(list(results_to_db.values()))
+                cars_db.bulk_insert(results_to_db)
                 break
 
         LOGGER.info('Orchestrator stopped.')

@@ -8,6 +8,7 @@ services:
     env_file: .env
     depends_on:
       - db
+      - mongodb
   
   worker:
     build:
@@ -17,6 +18,7 @@ services:
     env_file: .env
     depends_on:
       - db
+      - mongodb
   
   db:
     image: postgres:latest
@@ -41,3 +43,11 @@ services:
       - REDIS_PORT=6379
       - REDIS_DATABASES=16
   
+  mongodb:
+    image: mongo:4.4
+    restart: unless-stopped
+    ports:
+      - 27017:27017
+    volumes:
+      -  ./data:/data/db
+

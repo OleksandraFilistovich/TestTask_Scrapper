@@ -1,10 +1,16 @@
 loguru
+
+pymongo
+
 sqlalchemy
 psycopg2-binary
-beautifulsoup4
+
+redis == 4.5.5
+
 requests
-asyncio
-aiohttp
+beautifulsoup4
 parsel
 playwright
-redis == 4.5.5
+
+asyncio
+aiohttp

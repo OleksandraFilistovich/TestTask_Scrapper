@@ -1,7 +1,6 @@
 import sqlalchemy as sq
 from sqlalchemy.orm import Session
 
-from utils.car import CarInfo
 from utils.logs import get_logger
 from database.models import Base, Cars, Tasks
 
@@ -23,13 +22,14 @@ class TableDB:
 class CarsDB(TableDB):
     """Class to work with 'Cars' table."""
 
-    def bulk_insert(self, list_values: list[CarInfo]) -> None:
+    def bulk_insert(self, cars_values: dict) -> None:
         """
         Inserts info from list of car into table if possible.
         Writes exact exception if failed.
         """
+        cars_values = list(cars_values.values())
         with self.engine.connect() as conn:
-            for value in list_values:
+            for value in cars_values:
                 try:
                     conn.execute(Cars.__table__.insert(), value)
                     conn.commit()
@@ -48,7 +48,7 @@ class CarsDB(TableDB):
 class TasksDB(TableDB):
     """Class to work with 'Tasks' table."""
 
-    def populate(self, start_page: int, end_page: int) -> None:
+    def populate_tasks(self, start_page: int, end_page: int) -> None:
         """Adds pages numbers as tasks to table."""
         with self.engine.connect() as conn:
             for page in range(start_page, end_page+1):
